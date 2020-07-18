@@ -3,7 +3,8 @@
  * for more details, please see http://idangero.us/swiper/demos/
  * @author Eugene Matseruk
  */
-import { Swiper, Navigation, History } from 'swiper';
+import Swiper from 'swiper';
+import { Swiper as SwiperESM, Navigation, History } from 'swiper/js/swiper.esm';
 
 const containerSelector = '.swiper-container';
 
@@ -12,6 +13,7 @@ const containerSelector = '.swiper-container';
  */
 function defaultDemo() {
     const swiper = new Swiper(containerSelector);
+    const swiper2 = new SwiperESM(containerSelector);
 }
 /**
  * 020-navigation
@@ -204,6 +206,24 @@ function centeredSlidesAndAutoSlidesPerView() {
             el: '.swiper-pagination',
             clickable: true,
         },
+    });
+}
+
+/**
+ * CSS Scroll Snap (CSS Mode)
+ */
+function cssScrollSnap() {
+    const swiper = new Swiper(containerSelector, {
+        cssMode: true,
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+        pagination: {
+          el: '.swiper-pagination'
+        },
+        mousewheel: true,
+        keyboard: true,
     });
 }
 
@@ -545,6 +565,10 @@ function hashNavigation() {
             nextEl: '.swiper-button-next',
             prevEl: '.swiper-button-prev',
         },
+        on: {
+            hashChange: () => null,
+            hashSet: () => null
+        }
     });
 }
 
@@ -771,7 +795,48 @@ function slideableNavigation() {
  * Swiper module instalation.
  */
 function staticUseModules() {
-    Swiper.use([Navigation, History]);
+    SwiperESM.use([Navigation, History]);
 
     const swiper = new Swiper(containerSelector);
+}
+
+/**
+ * Update On Window Resize
+ */
+function updateOnWindowResize() {
+    const swiper = new Swiper(containerSelector, {
+        updateOnWindowResize: false,
+        pagination: {
+            el: '.swiper-pagination',
+        },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+    });
+}
+
+/**
+ * Thumbs
+ */
+function thumbs() {
+    const thumbsSwiper = new Swiper('.swiper-container-thumbs', {
+        slidesPerView: 5,
+    });
+    const swiper = new Swiper(containerSelector, {
+        pagination: {
+            el: '.swiper-pagination',
+        },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        thumbs: {
+          swiper: thumbsSwiper,
+          slideThumbActiveClass: 'swiper-slide-thumb-active',
+          thumbsContainerClass: 'swiper-container-thumbs',
+          multipleActiveThumbs: true,
+          autoScrollOffset: 0
+        }
+    });
 }

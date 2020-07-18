@@ -15,7 +15,9 @@
             "../"
         ],
         "paths": {
-            "@ember/utils": ["ember__utils"]
+            "@ember/utils": [
+                "ember__utils"
+            ]
         },
         "types": [],
         "noEmit": true,

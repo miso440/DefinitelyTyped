@@ -1,6 +1,10 @@
 // Type definitions for helmet
 // Project: https://github.com/helmetjs/helmet
-// Definitions by: Cyril Schumacher <https://github.com/cyrilschumacher>, Evan Hahn <https://github.com/EvanHahn>, Elliot Blackburn <https://github.com/bluehatbrit>
+// Definitions by: Cyril Schumacher <https://github.com/cyrilschumacher>
+//                 Evan Hahn <https://github.com/EvanHahn>
+//                 Elliot Blackburn <https://github.com/bluehatbrit>
+//                 Daniel Müller <https://github.com/chdanielmueller>
+//                 Piotr Błażejewicz <https://github.com/peterblazejewicz>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.3
 
@@ -13,6 +17,7 @@ declare namespace helmet {
     export interface IHelmetConfiguration {
         contentSecurityPolicy?: boolean | IHelmetContentSecurityPolicyConfiguration;
         dnsPrefetchControl?: boolean | IHelmetDnsPrefetchControlConfiguration;
+        featurePolicy?: IFeaturePolicyOptions;
         frameguard?: boolean | IHelmetFrameguardConfiguration;
         hidePoweredBy?: boolean | IHelmetHidePoweredByConfiguration;
         hpkp?: boolean | IHelmetHpkpConfiguration;
@@ -26,6 +31,12 @@ declare namespace helmet {
         permittedCrossDomainPolicies?: boolean | IHelmetPermittedCrossDomainPoliciesConfiguration;
     }
 
+    export interface IFeaturePolicyOptions {
+        features: {
+            [featureName: string]: string[];
+        };
+    }
+
     export interface IHelmetPermittedCrossDomainPoliciesConfiguration {
         permittedPolicies?: string;
     }
@@ -35,8 +46,27 @@ declare namespace helmet {
     }
     export type HelmetCspDirectiveValue = string | IHelmetContentSecurityPolicyDirectiveFunction;
 
+    export type HelmetCspSandboxDirective =
+        | string
+        | 'allow-forms'
+        | 'allow-modals'
+        | 'allow-orientation-lock'
+        | 'allow-pointer-lock'
+        | 'allow-popups-to-escape-sandbox'
+        | 'allow-popups'
+        | 'allow-presentation'
+        | 'allow-same-origin'
+        | 'allow-scripts'
+        | 'allow-top-navigation'
+
+    export type HelmetCspRequireSriForValue =
+        | string
+        | 'script'
+        | 'style'
+
     export interface IHelmetContentSecurityPolicyDirectives {
         baseUri?: HelmetCspDirectiveValue[];
+        blockAllMixedContent?: boolean;
         childSrc?: HelmetCspDirectiveValue[];
         connectSrc?: HelmetCspDirectiveValue[];
         defaultSrc?: HelmetCspDirectiveValue[];
@@ -45,21 +75,53 @@ declare namespace helmet {
         frameAncestors?: HelmetCspDirectiveValue[];
         frameSrc?: HelmetCspDirectiveValue[];
         imgSrc?: HelmetCspDirectiveValue[];
+        manifestSrc?: HelmetCspDirectiveValue[];
         mediaSrc?: HelmetCspDirectiveValue[];
         objectSrc?: HelmetCspDirectiveValue[];
         pluginTypes?: HelmetCspDirectiveValue[];
-        reportUri?: string;
-        sandbox?: HelmetCspDirectiveValue[];
+        prefetchSrc?: HelmetCspDirectiveValue[];
+        reportTo?: HelmetCspDirectiveValue;
+        reportUri?: HelmetCspDirectiveValue;
+        requireSriFor?: HelmetCspRequireSriForValue[];
+        sandbox?: HelmetCspSandboxDirective[];
         scriptSrc?: HelmetCspDirectiveValue[];
         styleSrc?: HelmetCspDirectiveValue[];
+        upgradeInsecureRequests?: boolean;
+        workerSrc?: HelmetCspDirectiveValue[];
+    }
+
+    export interface IHelmetContentSecurityPolicyDirectives {
+        'base-uri'?: HelmetCspDirectiveValue[];
+        'block-all-mixed-content'?: boolean;
+        'child-src'?: HelmetCspDirectiveValue[];
+        'connect-src'?: HelmetCspDirectiveValue[];
+        'default-src'?: HelmetCspDirectiveValue[];
+        'font-src'?: HelmetCspDirectiveValue[];
+        'form-action'?: HelmetCspDirectiveValue[];
+        'frame-ancestors'?: HelmetCspDirectiveValue[];
+        'frame-src'?: HelmetCspDirectiveValue[];
+        'img-src'?: HelmetCspDirectiveValue[];
+        'manifest-src'?: HelmetCspDirectiveValue[];
+        'media-src'?: HelmetCspDirectiveValue[];
+        'object-src'?: HelmetCspDirectiveValue[];
+        'plugin-types'?: HelmetCspDirectiveValue[];
+        'prefetch-src'?: HelmetCspDirectiveValue[];
+        'report-to'?: HelmetCspDirectiveValue;
+        'report-uri'?: HelmetCspDirectiveValue;
+        'require-sri-for'?: HelmetCspRequireSriForValue[];
+        'sandbox'?: HelmetCspSandboxDirective[];
+        'script-src'?: HelmetCspDirectiveValue;
+        'style-src'?: HelmetCspDirectiveValue;
+        'upgrade-insecure-requests'?: boolean;
+        'worker-src'?: HelmetCspDirectiveValue;
     }
 
     export interface IHelmetContentSecurityPolicyConfiguration {
-        reportOnly?: boolean;
+        reportOnly?: boolean | ((req: express.Request, res: express.Response) => boolean);
         setAllHeaders?: boolean;
         disableAndroid?: boolean;
         browserSniff?: boolean;
-        directives?: IHelmetContentSecurityPolicyDirectives;
+        directives: IHelmetContentSecurityPolicyDirectives;
         loose?: boolean;
     }
 
@@ -83,7 +145,11 @@ declare namespace helmet {
     export interface IHelmetHpkpConfiguration {
         maxAge: number;
         sha256s: string[];
+        /**
+         * @deprecated Use includeSubDomains instead. (Uppercase "D")
+         */
         includeSubdomains?: boolean;
+        includeSubDomains?: boolean;
         reportUri?: string;
         reportOnly?: boolean;
         setIf?: IHelmetSetIfFunction;
@@ -91,18 +157,23 @@ declare namespace helmet {
 
     export interface IHelmetHstsConfiguration {
         maxAge?: number;
+        /**
+         * @deprecated Use includeSubDomains instead. (Uppercase "D")
+         */
         includeSubdomains?: boolean;
+        includeSubDomains?: boolean;
         preload?: boolean;
         setIf?: IHelmetSetIfFunction;
         force?: boolean;
     }
 
     export interface IHelmetReferrerPolicyConfiguration {
-        policy?: string;
+        policy?: string | string[];
     }
 
     export interface IHelmetXssFilterConfiguration {
         setOnOldIE?: boolean;
+        reportUri?: string;
     }
 
     export interface IHelmetExpectCtConfiguration {
@@ -127,7 +198,7 @@ declare namespace helmet {
          * @param {IHelmetContentSecurityPolicyConfiguration} options The options
          * @return {RequestHandler} The Request handler
          */
-        contentSecurityPolicy(options?: IHelmetContentSecurityPolicyConfiguration): express.RequestHandler;
+        contentSecurityPolicy(options: IHelmetContentSecurityPolicyConfiguration): express.RequestHandler;
 
         /**
          * @summary Stop browsers from doing DNS prefetching.
@@ -135,6 +206,13 @@ declare namespace helmet {
          * @return {RequestHandler} The Request handler
          */
         dnsPrefetchControl(options?: IHelmetDnsPrefetchControlConfiguration): express.RequestHandler;
+
+        /**
+         * @summary Restrict which browser features can be used
+         * @param {IFeaturePolicyOptions} options The options
+         * @return {RequestHandler} The Request handler
+         */
+        featurePolicy(options: IFeaturePolicyOptions): express.RequestHandler;
 
         /**
          * @summary Prevent clickjacking.

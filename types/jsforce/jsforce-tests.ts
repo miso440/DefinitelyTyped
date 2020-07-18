@@ -15,7 +15,20 @@ const salesforceConnection: sf.Connection = new sf.Connection({
         clientId: '',
         clientSecret: '',
     },
+    refreshFn: (conn: sf.Connection, callback?: sf.Callback<sf.UserInfo>): Promise<sf.UserInfo> => {
+        return conn.login('username', 'password', callback);
+    },
 });
+
+async function testIdentity(connection: sf.Connection) {
+    // Callback style.
+    connection.identity((err: Error | null, identityInfo: sf.IdentityInfo) => {
+    });
+    // Promise style.
+    const userInfo = await connection.identity();
+    userInfo.id; // $ExpectType string
+    userInfo.active; // $ExpectType boolean
+}
 
 async function testSObject(connection: sf.Connection) {
     interface DummyRecord {
@@ -400,6 +413,26 @@ async function testSObject(connection: sf.Connection) {
             ret; // $ExpectType RecordResult[]
         });
     }
+
+    { // Test salesforceConnection.recent
+        // $ExpectType RecordResult[]
+        await salesforceConnection.recent();
+
+        // $ExpectType RecordResult[]
+        await salesforceConnection.recent('Account');
+
+        // $ExpectType RecordResult[]
+        await salesforceConnection.recent(5);
+
+        // $ExpectType RecordResult[]
+        await salesforceConnection.recent('Account', 5);
+
+        // with callback
+        salesforceConnection.recent((err, ret) => {
+            err; // $ExpectType Error
+            ret; // $ExpectType RecordResult[]
+        });
+    }
 }
 
 const requestInfo: sf.RequestInfo = {
@@ -615,7 +648,7 @@ async function testChatter(conn: sf.Connection): Promise<void> {
 
     const feedResource: sf.Resource<sf.RequestResult> = chatter.resource('/feed-elements');
 
-    const feedCreateRequest: any = await (feedResource.create({
+    const feedCreateRequest: any = await feedResource.create({
         body: {
             messageSegments: [{
                 type: 'Text',
@@ -624,13 +657,13 @@ async function testChatter(conn: sf.Connection): Promise<void> {
         },
         feedElementType: 'FeedItem',
         subjectId: 'me'
-    }) as Promise<sf.RequestResult>);
+    });
 
     console.log(`feedCreateRequest.id: ${feedCreateRequest.id}`);
     const itemLikesUrl = `/feed-elements/${feedCreateRequest.id}/capabilities/chatter-likes/items`;
     const itemsLikeResource: sf.Resource<sf.RequestResult> = chatter.resource(itemLikesUrl);
 
-    const itemsLikeCreateResult: sf.RequestResult = await (itemsLikeResource.create('') as Promise<sf.RequestResult>);
+    const itemsLikeCreateResult: sf.RequestResult = await itemsLikeResource.create('');
     console.log(`itemsLikeCreateResult['likedItem']: ${itemsLikeCreateResult as any['likedItem']}`);
 }
 
@@ -686,6 +719,16 @@ salesforceConnection.streaming.topic("InvoiceStatementUpdates").subscribe((messa
     console.log('Event Created : ' + message.event.createdDate);
     console.log('Object Id : ' + message.sobject.Id);
 });
+const exitCallback = () => process.exit(1);
+const channel = '/event/My_Event__e';
+const replayId = -2;
+const replayExt = new sf.StreamingExtension.Replay(channel, replayId);
+const authFailureExt = new sf.StreamingExtension.AuthFailure(exitCallback);
+const fayeClient = salesforceConnection.streaming.createClient([authFailureExt, replayExt]);
+const subscription = fayeClient.subscribe(channel, (data: any) => {
+    console.log('topic received data', data);
+});
+subscription.cancel();
 
 async function testDescribe() {
     const global: sf.DescribeGlobalResult = await salesforceConnection.describeGlobal();
@@ -697,7 +740,6 @@ async function testDescribe() {
         const object: sf.DescribeSObjectResult = await salesforceConnection.describe(sobject.name);
         const cachedObject: sf.DescribeSObjectResult = salesforceConnection.describe$(sobject.name);
         salesforceConnection.describe$.clear();
-
         object.fields.forEach(field => {
             const type: sf.FieldType = field.type;
             // following should never compile
@@ -715,4 +757,95 @@ async function testDescribe() {
 
         const correctlyCached = object === cachedObject;
     });
+}
+
+async function testApex(conn: sf.Connection): Promise<void> {
+    const apex: sf.Apex = conn.apex;
+
+    // Test GET
+    {
+        await apex.get('/custom-get-apex-api');
+
+        apex.get('/custom-get-apex-api', (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+
+        apex.get('/custom-get-apex-api', { headers: { 'X-Custom-Header': 'value' } });
+    }
+
+    // Test POST
+    {
+        await apex.post('/custom-apex-api', { email: 'test@example.com' });
+
+        apex.post('/custom-apex-api', (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+
+        // Including custom body
+        apex.post('/custom-apex-api', { email: 'test@example.com' }, (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+    }
+
+    // Test PUT
+    {
+        await apex.put('/custom-apex-api', { email: 'test@example.com' });
+
+        apex.put('/custom-apex-api', (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+
+        // Including custom body
+        apex.put('/custom-apex-api', { email: 'test@example.com' }, (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+    }
+
+    // Test PATCH
+    {
+        await apex.patch('/custom-apex-api', { email: 'test@example.com' });
+
+        apex.patch('/custom-apex-api', (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+
+        // Including custom body
+        apex.patch('/custom-apex-api', { email: 'test@example.com' }, (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+    }
+
+    // Test DELETE
+    {
+        await apex.del('/custom-apex-api');
+
+        apex.del('/custom-apex-api', (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+
+        // alias
+        await apex.delete('/custom-apex-api');
+
+        apex.delete('/custom-apex-api', (err: Error | null, response: object) => {
+            if (!err) {
+                console.log(response);
+            }
+        });
+    }
 }

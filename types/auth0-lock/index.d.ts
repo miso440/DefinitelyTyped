@@ -1,10 +1,11 @@
 // Type definitions for auth0-lock 11.4
-// Project: http://auth0.com
+// Project: http://auth0.com, https://github.com/auth0/lock
 // Definitions by: Brian Caruso <https://github.com/carusology>
 //                 Dan Caddigan <https://github.com/goldcaddy77>
 //                 Larry Faudree <https://github.com/lfaudreejr>
 //                 Will Caulfield <https://github.com/willcaul>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.7
 
 /// <reference types="auth0-js" />
 
@@ -85,7 +86,7 @@ interface Auth0LockThemeOptions {
 // https://auth0.com/docs/libraries/lock/v10/sending-authentication-parameters
 interface Auth0LockAuthParamsOptions {
     access_token?: any;
-    connection_scopes?: any;
+    connection_scope?: any;
     device?: any;
     nonce?: any;
     protocol?: any;
@@ -95,9 +96,11 @@ interface Auth0LockAuthParamsOptions {
 }
 
 interface Auth0LockAuthOptions {
+    autoParseHash?: boolean;
     params?: Auth0LockAuthParamsOptions;
     redirect?: boolean;
     redirectUrl?: string;
+    responseMode?: string;
     responseType?: string;
     sso?: boolean;
     audience?: string;
@@ -113,8 +116,10 @@ interface Auth0LockPopupOptions {
 interface Auth0LockConstructorOptions {
     additionalSignUpFields?: Auth0LockAdditionalSignUpField[];
     allowedConnections?: string[];
+    allowAutocomplete?: boolean;
     allowForgotPassword?: boolean;
     allowLogin?: boolean;
+    allowPasswordAutocomplete?: boolean;
     allowSignUp?: boolean;
     allowShowPassword?: boolean;
     assetsUrl?: string;
@@ -126,9 +131,10 @@ interface Auth0LockConstructorOptions {
     closable?: boolean;
     configurationBaseUrl?: string;
     container?: string;
-    defaultADUsernameFromEmailPrefix?: string;
+    defaultADUsernameFromEmailPrefix?: boolean;
     defaultDatabaseConnection?: string;
     defaultEnterpriseConnection?: string;
+    flashMessage?: Auth0LockFlashMessageOptions;
     forgotPasswordLink?: string;
     hashCleanup?: boolean;
     initialScreen?: "login" | "signUp" | "forgotPassword";
@@ -142,6 +148,7 @@ interface Auth0LockConstructorOptions {
     popupOptions?: Auth0LockPopupOptions;
     prefill?: { email?: string, username?: string};
     rememberLastLogin?: boolean;
+    scrollGlobalMessagesIntoView?: boolean;
     signupLink?: string;
     socialButtonStyle?: "big" | "small";
     theme?: Auth0LockThemeOptions;

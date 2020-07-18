@@ -30,7 +30,7 @@ class CustomComponentClassPaginationArrow extends React.Component<ReactDateRange
 }
 
 class App extends React.Component<AppProps, any> {
-    handleSelect(value: AppProps, states: any): void {
+    handleSelect(value: ReactDateRangePicker.OnSelectCallbackParam, states: any): void {
         this.setState({ value, states });
     }
 
@@ -39,7 +39,9 @@ class App extends React.Component<AppProps, any> {
             <div>
                 <DateRangePicker {...this.props}
                     onSelect={this.handleSelect.bind(this)}
-                    value={this.state.value} />
+                    value={this.state.value}
+                    locale="en"
+                    className="example" />
                 <div>
                     <input type="text"
                         value={this.state.value ? this.state.value.start.format('LL') : ""}
@@ -56,7 +58,7 @@ class App extends React.Component<AppProps, any> {
 }
 
 class DateSinglePicker extends React.Component<AppProps, any> {
-    handleSelect(value: AppProps) {
+    handleSelect(value: ReactDateRangePicker.OnSelectCallbackParam) {
         this.setState({ value });
     }
 
